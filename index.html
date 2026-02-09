@@ -3,118 +3,131 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Vocabulary Quiz</title>
+    <title>Vocabulary Step-by-Step Quiz</title>
     <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f7f6; display: flex; flex-direction: column; align-items: center; padding: 20px; }
-        .quiz-container { background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); max-width: 600px; width: 100%; }
-        .progress-wrapper { width: 100%; background-color: #e0e0e0; border-radius: 10px; height: 25px; margin-bottom: 20px; overflow: hidden; position: relative; }
-        #progress-bar-green { height: 100%; width: 0%; background-color: #4caf50; transition: width 0.3s; position: absolute; }
-        #progress-bar-red { height: 100%; width: 0%; background-color: #f44336; transition: width 0.3s; position: absolute; left: 0; z-index: 1; }
-        #percentage-text { position: absolute; width: 100%; text-align: center; font-weight: bold; z-index: 2; line-height: 25px; color: #333; }
-        .word-card { margin-bottom: 25px; padding-bottom: 15px; border-bottom: 1px solid #eee; }
-        .word-header { display: flex; align-items: center; gap: 15px; margin-bottom: 10px; }
-        .icon { width: 50px; height: 50px; object-fit: contain; }
-        .translation { font-size: 1.2rem; font-weight: bold; color: #2c3e50; }
-        .letter-hint { letter-spacing: 5px; font-family: monospace; color: #888; margin-bottom: 8px; }
-        input[type="text"] { padding: 10px; width: 200px; border: 2px solid #ddd; border-radius: 6px; font-size: 1rem; }
-        button { padding: 10px 20px; background-color: #3498db; color: white; border: none; border-radius: 6px; cursor: pointer; margin-left: 10px; transition: 0.2s; }
-        button:hover { background-color: #2980b9; }
-        .feedback { margin-left: 10px; font-weight: bold; }
-        .correct { color: #4caf50; }
-        .incorrect { color: #f44336; }
+        body { font-family: 'Segoe UI', Arial, sans-serif; background-color: #f0f2f5; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; margin: 0; }
+        .quiz-card { background: white; padding: 40px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); max-width: 500px; width: 90%; text-align: center; transition: all 0.3s ease; }
+        .progress-container { width: 100%; height: 12px; background: #eee; border-radius: 10px; margin-bottom: 30px; overflow: hidden; position: relative; }
+        .progress-fill-red { height: 100%; background: #ff4d4d; position: absolute; transition: width 0.5s; z-index: 1; }
+        .progress-fill-green { height: 100%; background: #2ecc71; position: absolute; transition: width 0.5s; z-index: 2; }
+        .word-image { width: 100%; height: 200px; object-fit: cover; border-radius: 15px; margin-bottom: 20px; }
+        .translation-text { font-size: 24px; font-weight: bold; color: #333; margin-bottom: 10px; }
+        .letter-hint { font-family: 'Courier New', monospace; font-size: 20px; letter-spacing: 8px; color: #888; margin-bottom: 20px; }
+        input[type="text"] { width: 80%; padding: 12px; font-size: 18px; border: 2px solid #ddd; border-radius: 8px; outline: none; transition: border-color 0.3s; }
+        input[type="text"]:focus { border-color: #3498db; }
+        .controls { margin-top: 25px; }
+        button { padding: 12px 30px; font-size: 16px; background: #3498db; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; }
+        button:hover { background: #2980b9; }
+        #final-score { display: none; }
     </style>
 </head>
 <body>
 
-<div class="quiz-container">
-    <h2>Vocabulary Mastery Quiz</h2>
-    
-    <div class="progress-wrapper">
-        <div id="progress-bar-red"></div>
-        <div id="progress-bar-green"></div>
-        <div id="percentage-text">0%</div>
+<div class="quiz-card" id="quiz-box">
+    <div class="progress-container">
+        <div class="progress-fill-red" id="red-bar" style="width: 0%"></div>
+        <div class="progress-fill-green" id="green-bar" style="width: 0%"></div>
     </div>
+    <div id="percentage">0%</div>
 
-    <div id="quiz-content"></div>
+    <div id="question-area">
+        <img id="display-image" src="" alt="vocabulary image" class="word-image">
+        <div class="translation-text" id="ru-word"></div>
+        <div class="letter-hint" id="letter-slots"></div>
+        <input type="text" id="user-input" autocomplete="off" placeholder="Type English here...">
+        <div class="controls">
+            <button onclick="checkAnswer()">Check</button>
+        </div>
+    </div>
+</div>
+
+<div class="quiz-card" id="final-score">
+    <h2>Quiz Complete!</h2>
+    <p id="score-summary"></p>
+    <button onclick="location.reload()">Restart</button>
 </div>
 
 <script>
-const vocabData = [
-    { ru: "Вызвать", en: "cause", img: "https://cdn-icons-png.flaticon.com/512/753/753314.png" },
-    { ru: "Развлекательный", en: "entertaining", img: "https://cdn-icons-png.flaticon.com/512/3163/3163478.png" },
-    { ru: "Неловкий", en: "awkward", img: "https://cdn-icons-png.flaticon.com/512/10044/10044820.png" },
-    { ru: "Запретить", en: "ban", img: "https://cdn-icons-png.flaticon.com/512/565/565340.png" },
-    { ru: "Состоять из", en: "consist of", img: "https://cdn-icons-png.flaticon.com/512/2452/2452365.png" },
-    { ru: "Жест", en: "gesture", img: "https://cdn-icons-png.flaticon.com/512/1533/1533890.png" },
-    { ru: "Цифровые медиа", en: "digital media", img: "https://cdn-icons-png.flaticon.com/512/2991/2991108.png" },
-    { ru: "Удалить", en: "delete", img: "https://cdn-icons-png.flaticon.com/512/1214/1214428.png" },
-    { ru: "Попытка", en: "attempt", img: "https://cdn-icons-png.flaticon.com/512/1651/1651639.png" },
-    { ru: "Привести к", en: "lead to", img: "https://cdn-icons-png.flaticon.com/512/2722/2722915.png" },
-    { ru: "Обидеть", en: "offend", img: "https://cdn-icons-png.flaticon.com/512/3596/3596091.png" },
-    { ru: "Свистеть", en: "whistle", img: "https://cdn-icons-png.flaticon.com/512/3063/3063750.png" },
-    { ru: "Спутать", en: "confuse", img: "https://cdn-icons-png.flaticon.com/512/1150/1150592.png" },
-    { ru: "Канцтовары", en: "stationery", img: "https://cdn-icons-png.flaticon.com/512/3204/3204001.png" },
-    { ru: "Домашний телефон", en: "landline", img: "https://cdn-icons-png.flaticon.com/512/483/483935.png" },
-    { ru: "Впечатление", en: "impression", img: "https://cdn-icons-png.flaticon.com/512/2584/2584631.png" },
-    { ru: "Мгновенный", en: "instant", img: "https://cdn-icons-png.flaticon.com/512/2951/2951104.png" },
-    { ru: "Вулкан", en: "volcano", img: "https://cdn-icons-png.flaticon.com/512/916/916568.png" },
-    { ru: "Необычный", en: "extraordinary", img: "https://cdn-icons-png.flaticon.com/512/1042/1042777.png" },
-    { ru: "Наверстать упущенное", en: "catch up", img: "https://cdn-icons-png.flaticon.com/512/2910/2910795.png" }
+const vocabList = [
+    { ru: "Вызвать", en: "cause", img: "https://images.unsplash.com/photo-1584467735815-f778f274e296?w=500&q=80" }, // Domino effect
+    { ru: "Развлекательный", en: "entertaining", img: "https://images.unsplash.com/photo-1492684223066-81342ee5ff30?w=500&q=80" }, // Cinema/Fun
+    { ru: "Неловкий", en: "awkward", img: "https://images.unsplash.com/photo-1541101767792-f9b2b1c4f127?w=500&q=80" }, // Social cringe
+    { ru: "Запретить", en: "ban", img: "https://images.unsplash.com/photo-1590012357757-410e7820e1dd?w=500&q=80" }, // No entry sign
+    { ru: "Состоять из", en: "consist of", img: "https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=500&q=80" }, // Components/Blocks
+    { ru: "Жест", en: "gesture", img: "https://images.unsplash.com/photo-1516733725897-1aa73b87c8e8?w=500&q=80" }, // Hand signaling
+    { ru: "Цифровые медиа", en: "digital media", img: "https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=500&q=80" }, // Screens/Devices
+    { ru: "Удалить", en: "delete", img: "https://images.unsplash.com/photo-1583508915901-b5f84c1dcde1?w=500&q=80" }, // Trash icon/Code
+    { ru: "Попытка", en: "attempt", img: "https://images.unsplash.com/photo-1484480974693-6ca0a78fb36b?w=500&q=80" }, // Trying to reach a goal
+    { ru: "Привести к", en: "lead to", img: "https://images.unsplash.com/photo-1503220317375-aaad61436b1b?w=500&q=80" }, // Path leading somewhere
+    { ru: "Обидеть", en: "offend", img: "https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?w=500&q=80" }, // Angry/Sad person
+    { ru: "Свистеть", en: "whistle", img: "https://images.unsplash.com/photo-1511210134421-267980998f48?w=500&q=80" }, // Person whistling
+    { ru: "Спутать", en: "confuse", img: "https://images.unsplash.com/photo-1509475826633-fed5bb19356e?w=500&q=80" }, // Puzzled face
+    { ru: "Канцтовары", en: "stationery", img: "https://images.unsplash.com/photo-1456735190827-d1262f71b8a3?w=500&q=80" }, // Pens and notebooks
+    { ru: "Домашний телефон", en: "landline", img: "https://images.unsplash.com/photo-1520923642038-b4259ace9439?w=500&q=80" }, // Old phone
+    { ru: "Впечатление", en: "impression", img: "https://images.unsplash.com/photo-1490114538077-0a7f8cb49891?w=500&q=80" }, // Suit/First meeting
+    { ru: "Мгновенный", en: "instant", img: "https://images.unsplash.com/photo-1563986768609-322da13575f3?w=500&q=80" }, // Fast loading/Coffee
+    { ru: "Вулкан", en: "volcano", img: "https://images.unsplash.com/photo-1580250935041-358b53272635?w=500&q=80" }, // Lava/Volcano
+    { ru: "Необычный", en: "extraordinary", img: "https://images.unsplash.com/photo-1454496522488-7a8e488e8606?w=500&q=80" }, // Unique mountain
+    { ru: "Наверстать упущенное", en: "catch up", img: "https://images.unsplash.com/photo-1461896836934-ffe607ba8211?w=500&q=80" }, // Running to catch up
 ];
 
-let results = new Array(vocabData.length).fill(null);
+let currentIndex = 0;
+let correctAnswers = 0;
 
-function renderQuiz() {
-    const container = document.getElementById('quiz-content');
-    vocabData.forEach((item, index) => {
-        const hint = item.en.split('').map(char => char === ' ' ? '&nbsp;&nbsp;' : '_').join(' ');
-        
-        const card = document.createElement('div');
-        card.className = 'word-card';
-        card.innerHTML = `
-            <div class="word-header">
-                <img src="${item.img}" class="icon" alt="icon">
-                <span class="translation">${item.ru}</span>
-            </div>
-            <div class="letter-hint">${hint}</div>
-            <input type="text" id="input-${index}" placeholder="Type here...">
-            <button onclick="checkWord(${index})">Check</button>
-            <span id="feedback-${index}" class="feedback"></span>
-        `;
-        container.appendChild(card);
-    });
-}
-
-window.checkWord = function(index) {
-    const userInput = document.getElementById(`input-${index}`).value.trim().toLowerCase();
-    const feedback = document.getElementById(`feedback-${index}`);
-    
-    if (userInput === vocabData[index].en.toLowerCase()) {
-        feedback.textContent = "✓";
-        feedback.className = "feedback correct";
-        results[index] = true;
-    } else {
-        feedback.textContent = "✗";
-        feedback.className = "feedback incorrect";
-        results[index] = false;
+function loadQuestion() {
+    if (currentIndex >= vocabList.length) {
+        showResults();
+        return;
     }
-    updateProgress();
-};
-
-function updateProgress() {
-    const total = vocabData.length;
-    const correctCount = results.filter(r => r === true).length;
-    const incorrectCount = results.filter(r => r === false).length;
+    const currentWord = vocabList[currentIndex];
+    document.getElementById('display-image').src = currentWord.img;
+    document.getElementById('ru-word').innerText = currentWord.ru;
+    document.getElementById('user-input').value = "";
     
-    const greenPercent = (correctCount / total) * 100;
-    const redPercent = ((correctCount + incorrectCount) / total) * 100;
-
-    document.getElementById('progress-bar-green').style.width = greenPercent + "%";
-    document.getElementById('progress-bar-red').style.width = redPercent + "%";
-    document.getElementById('percentage-text').textContent = Math.round(greenPercent) + "% Correct";
+    // Create the _ _ _ _ hint
+    const hint = currentWord.en.split('').map(char => (char === ' ' ? '&nbsp;&nbsp;' : '_')).join(' ');
+    document.getElementById('letter-slots').innerHTML = hint;
+    
+    updateProgressBar();
 }
 
-renderQuiz();
+function checkAnswer() {
+    const input = document.getElementById('user-input').value.trim().toLowerCase();
+    const target = vocabList[currentIndex].en.toLowerCase();
+    
+    if (input === target) {
+        correctAnswers++;
+    }
+    
+    currentIndex++;
+    loadQuestion();
+}
+
+function updateProgressBar() {
+    const total = vocabList.length;
+    const progressTotal = (currentIndex / total) * 100;
+    const progressGreen = (correctAnswers / total) * 100;
+
+    document.getElementById('red-bar').style.width = progressTotal + "%";
+    document.getElementById('green-bar').style.width = progressGreen + "%";
+    document.getElementById('percentage').innerText = Math.round(progressGreen) + "%";
+}
+
+function showResults() {
+    document.getElementById('quiz-box').style.display = 'none';
+    const finalBox = document.getElementById('final-score');
+    finalBox.style.display = 'block';
+    document.getElementById('score-summary').innerText = `You got ${correctAnswers} out of ${vocabList.length} correct!`;
+}
+
+// Allow "Enter" key to submit
+document.getElementById("user-input").addEventListener("keyup", function(event) {
+    if (event.key === "Enter") {
+        checkAnswer();
+    }
+});
+
+loadQuestion();
 </script>
 
 </body>
